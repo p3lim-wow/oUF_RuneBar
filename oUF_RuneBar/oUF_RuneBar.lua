@@ -8,6 +8,8 @@
 	- symbol: The symbol used when cooldowns are over. (Default: "*")
 	- interval: The time offset used for the update script. (Default: 0.5)
 
+	StatusBar only:
+	- :PostUpdate(event, rune, usable)
 --]]
 
 local localized, class = UnitClass('player')
@@ -47,6 +49,8 @@ local function UpdateStatusBar(self, event, rune, usable)
 	if(rune and not usable and GetRuneType(rune)) then
 		self.RuneBar[rune]:SetScript('OnUpdate', function(self) OnUpdateBar(self, rune) end)
 	end
+
+	if(self.RuneBar.PostUpdate) then self.RuneBar:PostUpdate(event, rune, usable) end
 end
 
 local function Update(self, event, rune)
