@@ -82,12 +82,10 @@ local function Enable(self, unit)
 		runebar.colors = self.colors.runes or colors
 
 		self:RegisterEvent('RUNE_TYPE_UPDATE', Update)
+		self:RegisterEvent('RUNE_POWER_UPDATE', #runebar == 0 and Update or UpdateStatusBar)
 
 		if(#runebar == 0) then
-			self:RegisterEvent('RUNE_POWER_UPDATE', Update)
 			dummy:SetScript('OnUpdate', function(s, e) OnUpdateText(self, e) end)
-		else
-			self:RegisterEvent('RUNE_POWER_UPDATE', UpdateStatusBar)
 		end
 
 		RuneFrame:Hide()
