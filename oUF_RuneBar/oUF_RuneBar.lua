@@ -12,6 +12,10 @@
 	- :PostUpdate(event, rune, usable)
 --]]
 
+local unpack = unpack
+local floor = math.floor
+local format = string.format
+
 local localized, class = UnitClass('player')
 local dummy = CreateFrame('Frame')
 local colors = {
@@ -58,11 +62,10 @@ local function Update(self, event, rune)
 	if(#runebar == 0) then
 		local text = ''
 		for i = 1, 6 do
-			local start, duration, ready, temp = GetRuneCooldown(i)
+			local start, duration, ready = GetRuneCooldown(i)
 			local r, g, b = unpack(runebar.colors[GetRuneType(i)])
 
-			local temp = ready and (runebar.symbol or '*') or (duration - math.floor(GetTime() - start))
-			text = string.format('%s|cff%02x%02x%02x%s%s|r', text, r * 255, g * 255, b * 255, temp, runebar.space or ' ')
+			text = format('%s|cff%02x%02x%02x%s%s|r', text, r * 255, g * 255, b * 255, ready and (runebar.symbol or '*') or floor(duration - floor(GetTime() - start)), i ~= 6 and (runebar.space or ' ') or '')
 		end
 
 		runebar:SetText(text)
