@@ -81,6 +81,10 @@ local function Enable(self, unit)
 
 		if(#bar == 0) then
 			CreateFrame('Frame'):SetScript('OnUpdate', function(_, elapsed) OnUpdateText(self, elapsed) end)
+		else
+			for i = 1, 6 do
+				bar[i]:SetMinMaxValues(0, 1)
+			end
 		end
 
 		RuneFrame:Hide()
