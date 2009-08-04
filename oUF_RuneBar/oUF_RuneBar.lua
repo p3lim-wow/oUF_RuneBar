@@ -118,5 +118,5 @@ oUF:AddElement('RuneBar', function(...)
 		fontstring(...)
 	else
 		statusbar(...)
-	end,
-enable, disable)
+	end
+end, enable, disable)
