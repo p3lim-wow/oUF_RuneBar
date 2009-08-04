@@ -4,22 +4,22 @@
 	 .RuneBar [fontstring or table]
 
 	FontString only:
-	- space: The space between each "counter". (Default: " ")
-	- symbol: The symbol used when cooldowns are over. (Default: "*")
-	- interval: The time offset used for the update script. (Default: 0.5)
+	- space: [string] The space between each "counter". (Default: " ")
+	- symbol: [string] The symbol used when cooldowns are over. (Default: "*")
+	- interval: [value] The time offset used for the update script. (Default: 0.5)
 
 	StatusBar only:
-	- :PostUpdate(event, rune, usable)
+	- PostUpdate(bar, event, rune, usable)
 --]]
 
 local unpack = unpack
 local floor = math.floor
 local format = string.format
 
-local OnUpdateBar, OnUpdateText
+local updateBar, updateText
 do
 	local total = 0
-	function OnUpdateText(self, elapsed)
+	function updateText(self, elapsed)
 		total = total + elapsed
 
 		if(total >= (self.RuneBar.interval or 0.5)) then
@@ -28,7 +28,7 @@ do
 		end
 	end
 
-	function OnUpdateBar(self, rune)
+	function updateBar(self, rune)
 		local start, duration, ready = GetRuneCooldown(rune)
 
 		if(ready) then
@@ -40,50 +40,53 @@ do
 	end
 end	
 
-local function UpdateStatusBar(self, event, rune, usable)
-	if(rune and not usable and GetRuneType(rune)) then
-		self.RuneBar[rune]:SetScript('OnUpdate', function(self) OnUpdateBar(self, rune) end)
-	end
-
-	if(self.RuneBar.PostUpdate) then self.RuneBar:PostUpdate(event, rune, usable) end
-end
-
-local function Update(self)
+local function statusbar(self, event, rune, usable)
 	local bar = self.RuneBar
-	if(#bar == 0) then
-		local text = ''
-		for i = 1, 6 do
-			local start, duration, ready = GetRuneCooldown(i)
-			local r, g, b = unpack(bar.colors[GetRuneType(i)])
-
-			text = format('%s|cff%02x%02x%02x%s%s|r', text, r * 255, g * 255, b * 255, ready and (bar.symbol or '*') or floor(duration - floor(GetTime() - start)), i ~= 6 and (bar.space or ' ') or '')
-		end
-
-		bar:SetText(text)
-	else
-		for i = 1, 6 do
-			local runetype = GetRuneType(i)
-			if(runetype) then
-				bar[i]:SetStatusBarColor(unpack(bar.colors[runetype]))
-			end
-		end
+	if(rune and not usable and GetRuneType(rune)) then
+		bar[rune]:SetScript('OnUpdate', function(self) updateBar(self, rune) end)
 	end
+
+	for index = 1, 6 do
+		local runetype = GetRuneType(index)
+		if(runetype) then
+			bar[index]:SetStatusBarColor(unpack(bar.colors[runetype]))
+		end
+	end	
+
+	if(bar.PostUpdate) then bar:PostUpdate(event, rune, usable) end
 end
 
-local function Enable(self, unit)
+local function fontstring(self)
+	local text, str = self.RuneBar, ''
+
+	for index = 1, 6 do
+		local start, duration, ready = GetRuneCooldown(i)
+		local r, g, b = unpack(text.colors[GetRuneType(index)])
+
+		str = format('%s|cff%02x%02x%02x%s%s|r', str, r * 255, g * 255, b * 255, ready and (text.symbol or '*') or floor(duration - floor(GetTime() - start)), index ~= 6 and (text.space or ' ') or '')
+	end
+
+	text:SetText(str)
+end
+
+local function enable(self, unit)
 	local bar = self.RuneBar
 	if(bar and unit == 'player' and select(2, UnitClass('player')) == 'DEATHKNIGHT') then
 		local c = self.colors.runes or {}
 		bar.colors = {c[1] or {0.77, 0.12, 0.23}, c[2] or {0.3, 0.8, 0.1}, c[3] or {0, 0.4, 0.7}, c[4] or {0.8, 0.8, 0.8}}
 
-		self:RegisterEvent('RUNE_TYPE_UPDATE', Update)
-		self:RegisterEvent('RUNE_POWER_UPDATE', #bar == 0 and Update or UpdateStatusBar)
-
 		if(#bar == 0) then
-			CreateFrame('Frame'):SetScript('OnUpdate', function(_, elapsed) OnUpdateText(self, elapsed) end)
+			self:RegisterEvent('RUNE_TYPE_UPDATE', fontstring)
+			self:RegisterEvent('RUNE_POWER_UPDATE', fontstring)
+
+			bar.dummy = CreateFrame('Frame', nil, self)
+			bar.dummy:SetScript('OnUpdate', function(_, elapsed) updateText(self, elapsed) end)
 		else
-			for i = 1, 6 do
-				bar[i]:SetMinMaxValues(0, 1)
+			self:RegisterEvent('RUNE_TYPE_UPDATE', statusbar)
+			self:RegisterEvent('RUNE_POWER_UPDATE', statusbar)
+
+			for index = 1, 6 do
+				bar[index]:SetMinMaxValues(0, 1)
 			end
 		end
 
@@ -93,20 +96,27 @@ local function Enable(self, unit)
 	end
 end
 
-local function Disable(self)
+local function disable(self)
 	local bar = self.RuneBar
 	if(bar) then
-		self:RegisterEvent('RUNE_TYPE_UPDATE', Update)
-
 		if(#bar == 0) then
-			self:UnregisterEvent('RUNE_POWER_UPDATE', Update)
-			dummy:SetScript('OnUpdate', nil)
+			self:UnregisterEvent('RUNE_TYPE_UPDATE', fontstring)
+			self:UnregisterEvent('RUNE_POWER_UPDATE', fontstring)
+
+			bar.dummy:SetScript('OnUpdate', nil)
 		else
-			self:UnregisterEvent('RUNE_POWER_UPDATE', UpdateStatusBar)
+			self:UnregisterEvent('RUNE_TYPE_UPDATE', statusbar)
+			self:UnregisterEvent('RUNE_POWER_UPDATE', statusbar)
 		end
 
 		RuneFrame:Show()
 	end
 end
 
-oUF:AddElement('RuneBar', Update, Enable, Disable)
+oUF:AddElement('RuneBar', function(...)
+	if(#self.RuneBar == 0) then
+		fontstring(...)
+	else
+		statusbar(...)
+	end,
+enable, disable)
