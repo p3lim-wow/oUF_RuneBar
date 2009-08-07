@@ -113,10 +113,10 @@ local function disable(self)
 	end
 end
 
-oUF:AddElement('RuneBar', function(...)
+oUF:AddElement('RuneBar', function(self, ...)
 	if(#self.RuneBar == 0) then
-		fontstring(...)
+		fontstring(self, ...)
 	else
-		statusbar(...)
+		statusbar(self, ...)
 	end
 end, enable, disable)
