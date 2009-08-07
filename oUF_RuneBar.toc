@@ -2,7 +2,7 @@
 ## Author: p3lim
 ## Version: Alpha
 ## Title: oUF RuneBar
-## Notes: Death Knight rune support for oUF layouts.
+## Notes: Death Knight rune support for oUF layouts
 ## RequiredDeps: oUF
 
 oUF_RuneBar.lua
