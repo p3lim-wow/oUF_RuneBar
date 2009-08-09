@@ -1,6 +1,6 @@
 ## Interface: 30200
 ## Author: p3lim
-## Version: Alpha
+## Version: 30200.2-Beta
 ## Title: oUF RuneBar
 ## Notes: Death Knight rune support for oUF layouts
 ## RequiredDeps: oUF
