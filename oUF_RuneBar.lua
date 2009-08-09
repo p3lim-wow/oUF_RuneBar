@@ -42,18 +42,18 @@ end
 
 local function statusbar(self, event, rune, usable)
 	local bar = self.RuneBar
-	if(rune and not usable and GetRuneType(rune)) then
-		bar[rune]:SetScript('OnUpdate', function(self) updateBar(self, rune) end)
-	end
 
 	for index = 1, 6 do
-		local runetype = GetRuneType(index)
-		if(runetype) then
-			bar[index]:SetStatusBarColor(unpack(bar.colors[runetype]))
-		end
-	end	
+		bar[index]:SetStatusBarColor(unpack(bar.colors[GetRuneType(index)]))
+	end
 
-	if(bar.PostUpdate) then bar:PostUpdate(event, rune, usable) end
+	if(event == 'RUNE_POWER_UPDATE') then
+		if(rune and not usable) then
+			bar[rune]:SetScript('OnUpdate', function(self) updateBar(self, rune) end)
+		end
+
+		if(bar.PostUpdate) then bar:PostUpdate(event, rune, usable) end
+	end
 end
 
 local function fontstring(self)
